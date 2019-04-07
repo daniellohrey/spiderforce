@@ -46,6 +46,13 @@ class Scope:
 			return True
 		return False
 
+class NoScope(Scope):
+	def __init__(self):
+		pass
+
+	def in_scope(self, string):
+		return True
+
 if __name__ == "__main__":
 	if len(sys.argv) == 3:
 		scope = Scope(sys.argv[1])
