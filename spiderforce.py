@@ -53,7 +53,7 @@ sp.run()
 if args.write:
 	with open(args.write, "w") as f:
 		for word in sp.wordlist:
-			f.write(word)
+			f.write(word + "\n")
 else:
 	for word in sp.wordlist:
 		print(word)
