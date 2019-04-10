@@ -36,9 +36,10 @@ optional arguments:
                         Number of worker threads to use, defaults to 4
 
 Classes:
-	scope.py - defines a scope object, which takes a list of inscope strings, and optionally a list of outscope strings, and exposes a method to test whether a string falls in or out of scope.
-	
-	spider.py - defines a spider class, which any amount of domains, a scope (defaults to everything being in scope), an optional number of worker threads to use (default 4) and an optional maximum depth of links to spider, and exposes a run method which runs the spidering until the queue is exhausted (or an interrupt is triggered) and fills the wordlist with data.
+
+   scope.py - defines a scope object, which takes a list of inscope strings, and optionally a list of outscope strings, and exposes a method to test whether a string falls in or out of scope.
+
+   spider.py - defines a spider class, which any amount of domains, a scope (defaults to everything being in scope), an optional number of worker threads to use (default 4) and an optional maximum depth of links to spider, and exposes a run method which runs the spidering until the queue is exhausted (or an interrupt is triggered) and fills the wordlist with data.
 	
 
 spiderforce.py is a wrapper for the spider class with command line argument parsing.
