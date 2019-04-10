@@ -58,6 +58,7 @@ class Spider():
 				self._done.append(url)
 			else:
 				continue #weve already done this one
+			print("Parsing " + url)
 			self.q_links(html, url, depth)
 			self.g_words(html)
 
@@ -82,6 +83,7 @@ class Spider():
 		except KeyboardInterrupt:
 			pass #get out of loop and signal exit on keyboard interrupt
 		event.clear()
+		print("Waiting for threads to exit...")
 		for t in threads:
 			t.join() #wait for threads to exit
 
@@ -109,7 +111,7 @@ class Spider():
 			words = string.split()
 			for word in words:
 				#wordlist processing, move out of here
-				m = search("[-.a-zA-Z0-9]+", word)
+				m = search("[a-z]+", word.lower())
 				if m:
 					word = m[0]
 				else:
