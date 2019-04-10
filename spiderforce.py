@@ -3,7 +3,6 @@
 import argparse
 import spider
 import scope
-import sys
 
 def fix_domain(url):
 	if "://" not in url:
