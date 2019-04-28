@@ -1,21 +1,19 @@
 #class definition for spider
 
-from queue import SimpleQueue
-from queue import Empty
+from queue import SimpleQueue, Empty
 from threading import Thread, Event
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
 from urllib.parse import urljoin, urlsplit
 from bs4 import BeautifulSoup
 from time import sleep
-#from error import LinkError #dont need anymore
 from scope import Scope, NoScope
-from re import search
+from wordlist import WordList
 
 class Spider():
 	#takes any number of initial urls and an optional scope object
-	#optionally can speficify how many threads to use and when to stop queueing links
-	def __init__(self, *urls, scope = None, max_depth = -1, threads = 4):
+	#optionally can speficify how many threads to use, when to stop queueing links and regex to use to filter wordlist
+	def __init__(self, *urls, regex = None, scope = None, max_depth = -1, threads = 8, run = False):
 		if scope is not None:
 			self._scope = scope
 		else:
@@ -24,10 +22,12 @@ class Spider():
 		self._max_depth = max_depth
 		self._threads = threads
 		self._done = []
-		self._words = [] #update to use wordlist class
+		self._words = WordList(regex)
 		for url in urls:
-			u_d = (url, 1) #possibly need to start at 1
+			u_d = (url, 1)
 			self._queue.put(u_d)
+		if run:
+			self.run()
 
 	@property
 	def urls(self):
@@ -35,7 +35,12 @@ class Spider():
 
 	@property
 	def wordlist(self):
-		return self._words
+		return self._words.wordlist
+
+	@property
+	def next(self):
+		for word in self._words.next:
+			yield word
 
 	#worker thread function
 	#takes urls from the queue, parses and adds links to queue, records urls and scrapes text
@@ -72,16 +77,16 @@ class Spider():
 			t.start()
 			threads.append(t)
 		try:
-			sleep(3) #hacky sleep so we dont accidently quit initially
+			sleep(3) #dont accidently quit initially
 			while True:
 				if self._queue.empty():
-					sleep(2) #if queue is empty wait and check again, if its still empty were probably done
+					sleep(2) #double check queue is empty
 					if self._queue.empty():
 						break
 				else:
-					sleep(5)
+					sleep(2)
 		except KeyboardInterrupt:
-			pass #get out of loop and signal exit on keyboard interrupt
+			pass #signal exit on keyboard interrupt
 		event.clear()
 		print("Waiting for threads to exit...")
 		for t in threads:
@@ -106,18 +111,12 @@ class Spider():
 			
 	#gets all text from html and adds words to wordlist
 	def g_words(self, html):
+		wl = set()
 		soup = BeautifulSoup(html, features = "html.parser")
 		for string in soup.stripped_strings: #alt soup.get_text(strip=True)
 			words = string.split()
-			for word in words:
-				#wordlist processing, move out of here
-				m = search("[a-z]+", word.lower())
-				if m:
-					word = m[0]
-				else:
-					continue
-				if word not in self._words:
-					self._words.append(word)
+			wl.update(words)
+		self._words.add(wl)
 
 if __name__ == "__main__":
 	import sys
