@@ -5,7 +5,7 @@ import os
 import sys
 
 class Scope:
-	def __init__(self, inscope, *args):
+	def __init__(self, inscope, outscope = None):
 		self._inscope = []
 		self._outscope = []
 		if os.path.isfile(inscope):
@@ -15,7 +15,7 @@ class Scope:
 					self._inscope.append(line.lower())
 		else:
 			self._inscope.append(inscope.lower())
-		if len(args) == 1:
+		if outscope is not None:
 			if os.path.isfile(args[0]):
 				with open(args[0], "r") as f:
 					for line in f.readlines():
@@ -23,8 +23,6 @@ class Scope:
 						self._outscope.append(line.lower())
 			else:
 				self._outscope.append(args[0].lower())
-		elif len(args) > 1:
-			raise Exception("Too many arguments to Scope()")
 
 	def _incheck(self, string):
 		for item in self._inscope:

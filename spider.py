@@ -13,7 +13,7 @@ from wordlist import WordList
 class Spider():
 	#takes any number of initial urls and an optional scope object
 	#optionally can speficify how many threads to use, when to stop queueing links and regex to use to filter wordlist
-	def __init__(self, *urls, regex = None, scope = None, max_depth = -1, threads = 8, run = False):
+	def __init__(self, *urls, regex = None, scope = None, max_depth = -1, threads = 8, run = False, verbose = False):
 		if scope is not None:
 			self._scope = scope
 		else:
@@ -21,9 +21,10 @@ class Spider():
 		self._queue = SimpleQueue()
 		self._max_depth = max_depth
 		self._threads = threads
-		self._done = []
+		self._done = [] #update to set
 		self._words = WordList(regex)
 		for url in urls:
+			#should process urls here as well
 			u_d = (url, 1)
 			self._queue.put(u_d)
 		if run:
@@ -47,7 +48,7 @@ class Spider():
 	def worker(self, event):
 		while event.is_set():
 			try:
-				url, depth = self._queue.get(timeout = 3)
+				url, depth = self._queue.get(timeout = 1)
 			except Empty:
 				continue #try again if we didnt get anything, queue may be empty, in which case well exit soon
 			try:
@@ -58,17 +59,21 @@ class Spider():
 			except HTTPError as e:
 				continue #catch 404s etc.
 			except URLError as e:
-				continue #you done messed up
+				continue #mistake in url, skip
 			if url not in self._done:
 				self._done.append(url)
 			else:
 				continue #weve already done this one
-			print("Parsing " + url)
+			if self._verbose:
+				print("Parsing " + url)
+			#optimise parsing to only parse once
+			#improve post spidering with post requests, etc.
 			self.q_links(html, url, depth)
 			self.g_words(html)
 
 	#creates and runs threads
 	def run(self):
+		print("starting threads...")
 		threads = []
 		event = Event()
 		event.set() #event to signal threads to exit
@@ -77,10 +82,11 @@ class Spider():
 			t.start()
 			threads.append(t)
 		try:
-			sleep(3) #dont accidently quit initially
+			print("running... (ctrl-c to quit)")
+			sleep(2) #dont accidently quit initially
 			while True:
 				if self._queue.empty():
-					sleep(2) #double check queue is empty
+					sleep(1) #double check queue is empty
 					if self._queue.empty():
 						break
 				else:
@@ -88,7 +94,7 @@ class Spider():
 		except KeyboardInterrupt:
 			pass #signal exit on keyboard interrupt
 		event.clear()
-		print("Waiting for threads to exit...")
+		print("Waiting for threads to exit... (ctrl-c to force quit)")
 		for t in threads:
 			t.join() #wait for threads to exit
 
@@ -96,15 +102,17 @@ class Spider():
 	def q_links(self, html, url, depth):
 		if self._max_depth > 0 and depth >= self._max_depth:
 			return #dont want to add links that are too deep
-		depth += 1 #we have to go deeper *stares intently*
+		depth += 1
+		#add support for other parsers
 		soup = BeautifulSoup(html, features = "html.parser")
 		links = soup.find_all('a')
 		for link in links:
 			try:
 				#may need some preprocessing
+				#remove # and ? from url
 				link = urljoin(url, link["href"])
-				u_d = (link, depth)
 				if self._scope.in_scope(link):
+					u_d = (link, depth)
 					self._queue.put(u_d)
 			except Exception as e:
 				pass
@@ -112,8 +120,9 @@ class Spider():
 	#gets all text from html and adds words to wordlist
 	def g_words(self, html):
 		wl = set()
+		#add support for other parsers
 		soup = BeautifulSoup(html, features = "html.parser")
-		for string in soup.stripped_strings: #alt soup.get_text(strip=True)
+		for string in soup.stripped_strings:
 			words = string.split()
 			wl.update(words)
 		self._words.add(wl)
