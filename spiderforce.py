@@ -4,6 +4,7 @@ import argparse
 import spider
 import scope
 import sys
+import Wordlist
 
 #prepends http:// if not present
 def fix_domain(url):
@@ -39,7 +40,7 @@ else:
 
 #sc is scope
 if args.noscope:
-	sc = None
+	sc = scope.NoScope()
 else:
 	#i_sc is inscope
 	if args.scope is not None:
@@ -55,7 +56,9 @@ else:
 	else:
 		sc = scope.Scope(i_sc)
 
-sp = spider.Spider(*urls, scope = sc, max_depth = args.max_depth, threads = args.threads, regex = args.regex, verbose = args.verbose)
+wl = Wordlist(args.regex)
+
+sp = spider.Spider(*urls, scope = sc, max_depth = args.max_depth, threads = args.threads, wordlist = wl, verbose = args.verbose)
 sp.run()
 
 if args.write:

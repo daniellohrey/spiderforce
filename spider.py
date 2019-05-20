@@ -8,38 +8,39 @@ from urllib.parse import urljoin, urlsplit
 from bs4 import BeautifulSoup
 from time import sleep
 from scope import Scope, NoScope
-from wordlist import WordList
+from wordlist import Wordlist
 
 class Spider():
 	#takes any number of initial urls and an optional scope object
 	#optionally can speficify how many threads to use, when to stop queueing links and regex to use to filter wordlist
-	def __init__(self, *urls, regex = None, scope = None, max_depth = -1, threads = 8, run = False, verbose = False):
-		if scope is not None:
-			self._scope = scope
-		else:
-			self._scope = NoScope()
+	def __init__(self, *urls, scope = None, max_depth = -1, threads = 8, run = False, verbose = False, wordlist = None):
+		self._scope = scope
 		self._queue = SimpleQueue()
 		self._max_depth = max_depth
 		self._threads = threads
-		self._done = [] #update to set
-		self._words = WordList(regex)
+		self._done = set()
+		self._words = wordlist
 		for url in urls:
-			#should process urls here as well
 			u_d = (url, 1)
 			self._queue.put(u_d)
 		if run:
 			self.run()
 
 	@property
-	def urls(self):
+	def urllist(self):
 		return self._done
+
+	@property
+	def urls(self):
+		for url in self._done:
+			yield url
 
 	@property
 	def wordlist(self):
 		return self._words.wordlist
 
 	@property
-	def next(self):
+	def words(self):
 		for word in self._words.next:
 			yield word
 
@@ -61,12 +62,11 @@ class Spider():
 			except URLError as e:
 				continue #mistake in url, skip
 			if url not in self._done:
-				self._done.append(url)
+				self._done.add(url)
 			else:
 				continue #weve already done this one
 			if self._verbose:
 				print("Parsing " + url)
-			#optimise parsing to only parse once
 			#improve post spidering with post requests, etc.
 			self.q_links(html, url, depth)
 			self.g_words(html)
@@ -98,7 +98,7 @@ class Spider():
 		for t in threads:
 			t.join() #wait for threads to exit
 
-	#searches html for links and adds them to the queue if they are in scope (unless the exceed the maximum depth)
+	#searches html for links and adds them to the queue if they are in scope (unless they exceed the maximum depth)
 	def q_links(self, html, url, depth):
 		if self._max_depth > 0 and depth >= self._max_depth:
 			return #dont want to add links that are too deep
@@ -108,8 +108,10 @@ class Spider():
 		links = soup.find_all('a')
 		for link in links:
 			try:
-				#may need some preprocessing
-				#remove # and ? from url
+				if "?" in link:
+					link = link.split("?")[0]
+				if "#" in link:
+					link = link.split("#")[0]
 				link = urljoin(url, link["href"])
 				if self._scope.in_scope(link):
 					u_d = (link, depth)
