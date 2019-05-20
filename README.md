@@ -6,7 +6,7 @@ Given a [list of] domain[s], spiderforce parses all text to create a wordlist (o
 Installation (requires python3.7+):
 
 ```
-git clone https://github.com/daniellohrey/spiderforce
+git clone https://github.com/daniellohrey/spiderforce.git
 [sudo] pip install -r requirements.txt
 ```
 
