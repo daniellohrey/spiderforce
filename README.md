@@ -1,12 +1,16 @@
 # Spiderforce
 Given a [list of] domain[s], spiderforce parses all text to create a wordlist (optionally filtered by a given regex), and optionally spiders (in scope) links to a given depth (or until a keyboard interrupt is given). The resulting wordlist can be used to brute force passwords, subdomains, subdirectories, etc.
 
-Installation:
-(Requires python3.7+)
+---
+
+Installation (requires python3.7+):
+
 ```
 git clone https://github.com/daniellohrey/spiderforce
 [sudo] pip install -r requirements.txt
 ```
+
+---
 
 Basic usage:
 * Scrape a single webpage and print wordlist to stdout:
@@ -25,6 +29,7 @@ Basic usage:
 
    `spiderforce.py -d domain.com -w passwordlist.txt`
 
+---
 
 All options:
 ```
@@ -69,6 +74,7 @@ Arguments:
   
 A url is defined to be in scope if it contains at least one in-scope string, and no out of scope strings. Use the -n option to make all urls in scope. (Default scope is list of domains, if not specified.)
 
+---
 
 Classes:
 
@@ -87,5 +93,7 @@ Classes:
 * spiderforce.py
 
    Wrapper with command line argument parsing.
+   
+---
    
 I feel things are in a good, working state and the original design goals have been statisfied so further updates will be sporatic at best. That said, if you have any ideas for features, or encounter any issues, please reach out and I'll see what I can do.
