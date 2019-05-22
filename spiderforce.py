@@ -3,8 +3,7 @@
 import argparse
 import spider
 import scope
-import sys
-import Wordlist
+import wordlist
 
 #prepends http:// if not present
 def fix_domain(url):
@@ -20,7 +19,7 @@ parser.add_argument("-s", "--scope", help = "File containing in scope strings de
 parser.add_argument("-o", "--outscope", help = "File containing out of scope strings")
 parser.add_argument("-n", "--noscope", action = "store_true", help = "Flag to set all strings to be in scope")
 parser.add_argument("-w", "--write", help = "File to write wordlist out to instead of stdout")
-parser.add_argument("-m", "--max_depth", type = int, default = -1, help = "Maximum depth of links to spider")
+parser.add_argument("-m", "--max_depth", type = int, default = 1, help = "Maximum depth of links to spider, defaults to just given domains, 0 for infinite spidering")
 parser.add_argument("-t", "--threads", type = int, default = 8, help = "Number of worker threads to use, defaults to 8")
 parser.add_argument("-r", "--regex", help = "regex used to filter additions to wordlist")
 parser.add_argument("-v", "--verbose", action = "store_true", help = "Print domains as they are parsed")
@@ -34,9 +33,6 @@ elif args.domains:
 		urls = []
 		for line in f.readlines():
 			urls.append(fix_domain(line))
-else:
-	print("No domains to spider")
-	sys.exit()
 
 #sc is scope
 if args.noscope:

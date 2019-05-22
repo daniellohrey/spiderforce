@@ -1,7 +1,7 @@
 #class to hold a list of unique strings, matching a regex, implemented as a set
 import re
 
-class WordList():
+class Wordlist():
 	def __init__(self, regex):
 		if regex:
 			self._pat = re.compile(regex)

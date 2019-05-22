@@ -4,7 +4,7 @@ from queue import SimpleQueue, Empty
 from threading import Thread, Event
 from urllib.request import urlopen, Request
 from urllib.error import URLError, HTTPError
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 from time import sleep
 from scope import Scope, NoScope
@@ -13,7 +13,7 @@ from wordlist import Wordlist
 class Spider():
 	#takes any number of initial urls and an optional scope object
 	#optionally can speficify how many threads to use, when to stop queueing links and regex to use to filter wordlist
-	def __init__(self, *urls, scope = None, max_depth = -1, threads = 8, run = False, verbose = False, wordlist = None):
+	def __init__(self, *urls, scope = None, max_depth = 1, threads = 8, run = False, verbose = False, wordlist = None):
 		self._scope = scope
 		self._queue = SimpleQueue()
 		self._max_depth = max_depth
@@ -109,9 +109,9 @@ class Spider():
 		for link in links:
 			try:
 				if "?" in link:
-					link = link.split("?")[0]
+					link["href"] = link["href"].split("?")[0]
 				if "#" in link:
-					link = link.split("#")[0]
+					link["href"] = link["href"].split("#")[0]
 				link = urljoin(url, link["href"])
 				if self._scope.in_scope(link):
 					u_d = (link, depth)
